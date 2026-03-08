@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import cast
 
-from bookshelf.models import Book, BookNotFoundError, InvalidColumnError
+from bookshelf_api.models import Book, BookNotFoundError, InvalidColumnError
 
 # Module-level column whitelists: these are security boundaries that guard
 # against SQL injection in dynamically built queries (ORDER BY / SET clauses).
