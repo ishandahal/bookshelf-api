@@ -1,7 +1,7 @@
 [project]
 name = "bookshelf-api"
 version = "0.1.0"
-description = "Add your description here"
+description = "A RESTful API for tracking your reading list, built with FastAPI and SQLite"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
