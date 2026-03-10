@@ -35,3 +35,19 @@ def test_add_book_no_title(db_path: Path):
     response = client.post("/books", json=book_data)
 
     assert response.status_code == 422
+
+
+def test_remove_book(db_path: Path):
+    book = Book(author="Daniel Kahneman", title="Thinking Fast and Slow")
+    book_id = add_book(db_path, book)
+
+    response = client.delete(f"/books/{book_id}")
+
+    assert response.status_code == 204
+
+
+def test_remove_book_invalid_id(db_path: Path):
+    response = client.delete("/books/999")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Book not found"

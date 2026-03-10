@@ -1,11 +1,11 @@
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 
-from bookshelf_api.db import add_book, list_books
-from bookshelf_api.models import Book
+from bookshelf_api.db import add_book, delete_book, list_books
+from bookshelf_api.models import Book, BookNotFoundError
 
 DEFAULT_DB = Path.home() / ".bookshelf.db"
 
@@ -57,3 +57,20 @@ def create_book(
     book = Book(**book_data.model_dump())
     book_id = add_book(path, book)
     return {"id": book_id}
+
+
+@app.delete("/books/{book_id}", status_code=204)
+def remove_book(path: Annotated[Path, Depends(path_to_db)], book_id: int) -> None:
+    """Delete a book from the database.
+
+    Args:
+        path: Database path, injected via dependency.
+        book_id: ID of the book to delete.
+
+    Raises:
+        HTTPException: If the book is not found.
+    """
+    try:
+        delete_book(path, book_id)
+    except BookNotFoundError:
+        raise HTTPException(status_code=404, detail="Book not found")
