@@ -53,3 +53,23 @@ def test_add_book(tmp_path: Path):
 
     finally:
         app.dependency_overrides.clear()
+
+
+def test_add_book_no_title(tmp_path: Path):
+    def path_to_testdb():
+        return tmp_path / DEFAULT_DB_TEST
+
+    db_path = path_to_testdb()
+    init_db(db_path)
+
+    app.dependency_overrides[path_to_db] = path_to_testdb
+
+    try:
+        book_data = {"author": "Daniel Kahneman"}
+
+        response = client.post("/books", json=book_data)
+
+        assert response.status_code == 422
+
+    finally:
+        app.dependency_overrides.clear()
