@@ -51,3 +51,25 @@ def test_remove_book_invalid_id(db_path: Path):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Book not found"
+
+
+def test_edit_book(db_path: Path):
+    book = Book(author="D K", title="Thinking Fast and Slow")
+    book_id = add_book(db_path, book)
+
+    new_book_data = {"author": "Daniel Kahneman"}
+
+    response = client.patch(f"/books/{book_id}", json=new_book_data)
+
+    assert (
+        response.status_code == 204
+    )  # Using 204 instead of 200 because we do not send anything back on successful update
+
+
+def test_edit_book_invalid_id(db_path: Path):
+    new_book_data = {"author": "Daniel Kahneman"}
+
+    response = client.patch(f"/books/{999}", json=new_book_data)
+
+    assert response.status_code == 404  # Using 404 because the book_id is not found
+    assert response.json()["detail"] == "Book not found"
