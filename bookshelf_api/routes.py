@@ -1,10 +1,10 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 
-from bookshelf_api.db import add_book, delete_book, list_books
+from bookshelf_api.db import add_book, delete_book, list_books, update_book
 from bookshelf_api.models import Book, BookNotFoundError
 
 DEFAULT_DB = Path.home() / ".bookshelf.db"
@@ -21,6 +21,17 @@ class BookCreate(BaseModel):
     genre: str = ""
     notes: str = ""
     source: str = ""
+
+
+class BookUpdate(BaseModel):
+    """Schema for editing an existing book."""
+
+    title: Optional[str] = None
+    author: Optional[str] = None
+    status: Optional[str] = None
+    genre: Optional[str] = None
+    notes: Optional[str] = None
+    source: Optional[str] = None
 
 
 def path_to_db() -> Path:
@@ -72,5 +83,27 @@ def remove_book(path: Annotated[Path, Depends(path_to_db)], book_id: int) -> Non
     """
     try:
         delete_book(path, book_id)
+    except BookNotFoundError:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+
+@app.patch("/books/{book_id}", status_code=204)
+def edit_book(
+    path: Annotated[Path, Depends(path_to_db)], book_id: int, new_book_data: BookUpdate
+) -> None:
+    """Update book details from the database.
+
+    Args:
+        path: Database path, injected via dependency.
+        book_id: ID of the book to be updated.
+        new_book_data: field and values of book to be updated.
+
+    Raises:
+        HTTPException: If the book is not found.
+    """
+    new_book_data_dict = new_book_data.model_dump(exclude_none=True)
+
+    try:
+        update_book(path, book_id, new_book_data_dict)
     except BookNotFoundError:
         raise HTTPException(status_code=404, detail="Book not found")
