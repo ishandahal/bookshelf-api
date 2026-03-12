@@ -24,8 +24,9 @@ uv run pytest -v
 
 ## Endpoints
 
-| Method | Path            | Description          | Status Codes   |
-|--------|-----------------|----------------------|----------------|
-| GET    | `/books`        | List all books       | 200            |
-| POST   | `/books`        | Add a new book       | 201, 422       |
-| DELETE | `/books/{id}`   | Delete a book by ID  | 204, 404       |
+| Method | Path            | Description                          | Status Codes   |
+|--------|-----------------|--------------------------------------|----------------|
+| GET    | `/books`        | List all books, or search with `?search_term=...&field=...` | 200 |
+| POST   | `/books`        | Add a new book                       | 201, 422       |
+| PATCH  | `/books/{id}`   | Update a book (partial)              | 204, 404       |
+| DELETE | `/books/{id}`   | Delete a book by ID                  | 204, 404       |
