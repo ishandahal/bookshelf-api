@@ -1,10 +1,16 @@
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Literal
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
-from bookshelf_api.db import add_book, delete_book, list_books, update_book
+from bookshelf_api.db import (
+    add_book,
+    delete_book,
+    list_books,
+    update_book,
+    search_books,
+)
 from bookshelf_api.models import Book, BookNotFoundError
 
 DEFAULT_DB = Path.home() / ".bookshelf.db"
@@ -34,22 +40,12 @@ class BookUpdate(BaseModel):
     source: Optional[str] = None
 
 
+SearchableFields = Literal["title", "author", "genre", "notes", "source"]
+
+
 def path_to_db() -> Path:
     """Return the default database path."""
     return DEFAULT_DB
-
-
-@app.get("/books")
-def book_list(path: Annotated[Path, Depends(path_to_db)]) -> list[Book]:
-    """Fetch all books from the database.
-
-    Args:
-        path: Database path, injected via dependency.
-
-    Returns:
-        List of all books.
-    """
-    return list_books(path)
 
 
 @app.post("/books", status_code=201)
@@ -107,3 +103,25 @@ def edit_book(
         update_book(path, book_id, new_book_data_dict)
     except BookNotFoundError:
         raise HTTPException(status_code=404, detail="Book not found")
+
+
+@app.get("/books")
+def find_book(
+    path: Annotated[Path, Depends(path_to_db)],
+    search_term: Annotated[str | None, Query()] = None,
+    field: Annotated[SearchableFields | None, Query()] = None,
+) -> list[Book]:
+    """Fetch all books from the database that match the search term. If field is provided
+    only search in the field.
+
+    Args:
+        path: Database path, injected via dependency.
+        search_term: Used to search in the table
+        field: Column to be searched
+
+    Returns:
+        List of all books.
+    """
+    if search_term is not None:
+        return search_books(path, search_term, field)
+    return list_books(path)

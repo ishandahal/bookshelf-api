@@ -73,3 +73,50 @@ def test_edit_book_invalid_id(db_path: Path):
 
     assert response.status_code == 404  # Using 404 because the book_id is not found
     assert response.json()["detail"] == "Book not found"
+
+
+def test_find_book_with_search_term(db_path: Path):
+    book1 = Book(author="Daniel Kahneman", title="Thinking Fast and Slow")
+    add_book(db_path, book1)
+    book2 = Book(author="Anonymous", title="Bible")
+    add_book(db_path, book2)
+
+    search_term = "Fast"
+
+    response = client.get("/books/", params={"search_term": search_term})
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
+
+def test_find_book_with_search_term_not_in_db(db_path: Path):
+    book1 = Book(author="Daniel Kahneman", title="Thinking Fast and Slow")
+    add_book(db_path, book1)
+    book2 = Book(author="Anonymous", title="Bible")
+    add_book(db_path, book2)
+
+    search_term = "epic"
+
+    response = client.get("/books/", params={"search_term": search_term})
+
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+
+
+def test_find_book_with_term_and_field(db_path: Path):
+    book1 = Book(author="Daniel Kahneman", title="Thinking Fast and Slow")
+    add_book(db_path, book1)
+    book2 = Book(author="Anonymous", title="Bible")
+    add_book(db_path, book2)
+    book3 = Book(author="Jack Riper", title="Bible things")
+    add_book(db_path, book3)
+
+    search_term = "Bible"
+    field = "title"
+
+    response = client.get(
+        "/books/", params={"search_term": search_term, "field": field}
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()) == 2
