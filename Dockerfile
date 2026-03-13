@@ -1,5 +1,9 @@
 FROM python:3.12-slim-bookworm
 
+# Setup an app user so the container doesn't run as the root user
+RUN useradd -m app
+USER app
+
 # Add uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -14,9 +18,5 @@ RUN uv sync
 
 # Copy the project into the image
 COPY . ./
-
-# Setup an app user so the container doesn't run as the root user
-RUN useradd app
-USER app
 
 CMD ["uv", "run", "uvicorn", "bookshelf_api.routes:app", "--host", "0.0.0.0", "--port", "8080"]
