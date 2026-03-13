@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Annotated, Optional, Literal
+from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from pydantic import BaseModel
@@ -10,12 +11,20 @@ from bookshelf_api.db import (
     list_books,
     update_book,
     search_books,
+    init_db,
 )
 from bookshelf_api.models import Book, BookNotFoundError
 
 DEFAULT_DB = Path.home() / ".bookshelf.db"
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db(DEFAULT_DB)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 class BookCreate(BaseModel):
