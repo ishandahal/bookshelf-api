@@ -1,17 +1,19 @@
-from pathlib import Path
-from typing import Annotated, Optional, Literal
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Annotated, Literal, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from bookshelf_api.db import (
     add_book,
     delete_book,
-    list_books,
-    update_book,
-    search_books,
     init_db,
+    list_books,
+    search_books,
+    update_book,
 )
 from bookshelf_api.models import Book, BookNotFoundError
 
@@ -25,6 +27,24 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+LOCAL_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:5500",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5500",
+]
+
+FRONTEND_URL = os.environ.get("FRONTEND_URL")
+allowed_origins = LOCAL_ORIGINS + ([FRONTEND_URL] if FRONTEND_URL else [])
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Content-Type"],
+)
 
 
 class BookCreate(BaseModel):
