@@ -18,6 +18,13 @@ class Book:
     id: int | None = None
 
 
+@dataclass
+class User:
+    username: str
+    hashed_password: str
+    id: int | None = None
+
+
 class InvalidColumnError(Exception):
     pass
 

@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import cast
 
-from bookshelf_api.models import Book, BookNotFoundError, InvalidColumnError
+from bookshelf_api.models import Book, BookNotFoundError, InvalidColumnError, User
 
 # Module-level column whitelists: these are security boundaries that guard
 # against SQL injection in dynamically built queries (ORDER BY / SET clauses).
@@ -23,6 +23,13 @@ def init_db(db_path: Path) -> None:
     conn = sqlite3.connect(db_path)
     try:
         with conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL UNIQUE,
+                    hashed_password TEXT NOT NULL
+                )
+            """)
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS books (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -248,3 +255,45 @@ def search_books(
         )
         for row in rows
     ]
+
+
+def create_user(db_path: Path, user: User) -> None:
+    """Insert a user into the database.
+
+    Args:
+        db_path: Path to the SQLite database file.
+        user: User instance with hashed password.
+    """
+    conn = sqlite3.connect(db_path)
+    try:
+        with conn:
+            conn.execute(
+                "INSERT OR IGNORE INTO users (username, hashed_password) VALUES (?, ?)",
+                (user.username, user.hashed_password),
+            )
+    finally:
+        conn.close()
+
+
+def get_user(db_path: Path, username: str) -> User | None:
+    """Fetch a user by username.
+
+    Args:
+        db_path: Path to the SQLite database file.
+        username: The username to look up.
+
+    Returns:
+        User instance if found, None otherwise.
+    """
+    conn = sqlite3.connect(db_path)
+    try:
+        row = conn.execute(
+            "SELECT id, username, hashed_password FROM users WHERE username = ?",
+            (username,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if row is None:
+        return None
+    return User(id=row[0], username=row[1], hashed_password=row[2])
