@@ -9,7 +9,12 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError
 from pydantic import BaseModel
 
-from bookshelf_api.auth import create_token, decode_token, hash_password, verify_password
+from bookshelf_api.auth import (
+    create_token,
+    decode_token,
+    hash_password,
+    verify_password,
+)
 from bookshelf_api.db import (
     add_book,
     create_user,
@@ -38,7 +43,9 @@ def _seed_admin(db_path: Path) -> None:
     """Create the admin user from env vars if they don't exist yet."""
     username = os.environ.get("ADMIN_USERNAME", "admin")
     password = os.environ.get("ADMIN_PASSWORD", "password")
-    create_user(db_path, User(username=username, hashed_password=hash_password(password)))
+    create_user(
+        db_path, User(username=username, hashed_password=hash_password(password))
+    )
 
 
 app = FastAPI(lifespan=lifespan)
@@ -122,6 +129,7 @@ def get_current_user(
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
+
 @app.post("/auth/login")
 def login(
     path: Annotated[Path, Depends(path_to_db)],
@@ -150,6 +158,7 @@ def login(
 
 
 # ── Books (protected) ─────────────────────────────────────────────────────────
+
 
 @app.post("/books", status_code=201)
 def create_book(

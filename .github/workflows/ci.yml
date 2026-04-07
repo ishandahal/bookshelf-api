@@ -32,4 +32,6 @@ jobs:
         run: uv run mypy bookshelf_api/
 
       - name: Tests
+        env:
+          SECRET_KEY: ci-test-secret
         run: uv run pytest tests/ -v

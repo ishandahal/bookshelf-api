@@ -4,7 +4,9 @@ from datetime import datetime, timedelta, timezone
 import bcrypt
 from jose import JWTError, jwt
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is not set")
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_HOURS = 8
 
@@ -33,5 +35,7 @@ def decode_token(token: str) -> str:
         JWTError: If the token is invalid or expired.
     """
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    username: str = payload["sub"]
+    username = payload.get("sub")
+    if not username:
+        raise JWTError("Token missing subject")
     return username
